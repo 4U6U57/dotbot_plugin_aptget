@@ -43,7 +43,7 @@ git submodule add https://github.com/dein0s/dotbot_plugin_aptget.git
 
 ## Usage
 
-### Example config
+### Example configs
 ```yaml
 - aptget:
     tilix:
@@ -52,6 +52,20 @@ git submodule add https://github.com/dein0s/dotbot_plugin_aptget.git
     atom: ppa:webupd8team/atom
     htop:
 ```
+Another example, making use of default values and the [`dotbot-sudo` plugin](https://github.com/DrDynamic/dotbot-sudo)
+```yaml
+- defaults:
+    aptget:
+        upgrade: true       # will upgrade all packages...
+
+- sudo:
+  - aptget:
+        vim:
+        curl:
+        python3: 
+            upgrade: false  # ...except this one
+```
+
 
 ### Execution
 ```bash
