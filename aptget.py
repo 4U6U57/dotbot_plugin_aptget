@@ -12,6 +12,7 @@ class AptGet(dotbot.Plugin):
     def __init__(self, context):
         super(AptGet, self).__init__(self)
         self._apt_cache = apt.Cache()
+        self._context = context
 
     def can_handle(self, directive):
         return directive == self._directive
@@ -26,7 +27,7 @@ class AptGet(dotbot.Plugin):
         if os.geteuid() != 0:
             self._log.error('Need root permissions to install packages')
             raise AptGetError('Need root permissions to install packages')
-        # TODO: think about this: defaults = self._context.defaults().get('apt-get', {})
+
         success = True
         cleaned_packages = self._dispatch_names_and_sources(packages)
         if cleaned_packages['sources']:
@@ -51,24 +52,27 @@ class AptGet(dotbot.Plugin):
     def _dispatch_names_and_sources(self, packages):
         '''
         Returns cleaned dict with list of sources and dict of packages.
-        {"sources": [], "packages": {"packaga_name": "upgrade"}}
+        {"sources": [], "packages": {"package_name": "upgrade"}}
         '''
+        defaults = self._context.defaults().get(self._directive, {})
+        default_upgrade = defaults.get('upgrade', False)
+
         cleaned_dict = {'sources': [], 'packages': {}}
         if isinstance(packages, str):
-            cleaned_dict['packages'][packages] = False
+            cleaned_dict['packages'][packages] = default_upgrade
         elif isinstance(packages, list):
             for pkg_name in packages:
-                cleaned_dict['packages'][pkg_name] = False
+                cleaned_dict['packages'][pkg_name] = default_upgrade
         elif isinstance(packages, dict):
             for pkg_name, pkg_opts in packages.items():
                 if isinstance(pkg_opts, dict):
                     if 'ppa_source' in pkg_opts.keys():
                         cleaned_dict['sources'].append(pkg_opts['ppa_source'])
-                    cleaned_dict['packages'][pkg_name] = pkg_opts.get('upgrade', False)
+                    cleaned_dict['packages'][pkg_name] = pkg_opts.get('upgrade', default_upgrade)
                 else:
                     if pkg_opts:
                         cleaned_dict['sources'].append(pkg_opts)
-                    cleaned_dict['packages'][pkg_name] = False
+                    cleaned_dict['packages'][pkg_name] = default_upgrade
         return cleaned_dict
 
     def _add_ppa(self, source):
